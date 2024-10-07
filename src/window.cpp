@@ -4,7 +4,10 @@
 #include <shader/vertex-shader.h>
 #include <shader/fragment-shader.h>
 
+#include <shader.hpp>
+
 #include <iostream>
+#include <cmath>
 
 namespace Marlin {
     GLFWwindow* window;
@@ -17,66 +20,23 @@ namespace Marlin {
 
     // Render thread
     void renderThread() {
-        // Vertex Shader
-        const char *vertexShaderSource = shader_vertex_shader_glsl + '\0';
-        unsigned int vertexShader;
-        vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-        glCompileShader(vertexShader); // Compile the shader
-
-        // If compilation fails, indicate failure
-        int  success;
-        char infoLog[512];
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-
-        if(!success) {
-            glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-        }
-
-        // Fragment Shader
-        const char *fragmentShaderSource = shader_fragment_shader_glsl + '\0';
-        unsigned int fragmentShader;
-        fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-        glCompileShader(fragmentShader);
-
-        // If compilation fails, indicate failure
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-
-        if(!success) {
-            glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-        }
-
-        // Shader program
-        unsigned int shaderProgram;
-        shaderProgram = glCreateProgram();
-
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glLinkProgram(shaderProgram);
-
-        // Once again, indicate failure if necessary
-        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-        if(!success) {
-            glGetShaderInfoLog(shaderProgram, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-        }
-
-        // Delete vertex and fragment shader objects; already linked
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
+        Shader ourShader(shader_vertex_shader_glsl, shader_fragment_shader_glsl);
 
         // Quick proof-of-concept
-        float vertices[] = {
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            0.0f,  0.5f, 0.0f
+        float vertices[] = { // EBO reduces footprint of verticies
+            0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // top right
+            0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,  // bottom right
+            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom left
+            -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f   // top left 
         };
+        unsigned int indices[] = {  // note that we start from 0!
+            0, 1, 3,   // first triangle
+            1, 2, 3    // second triangle
+        }; 
         
-        unsigned int VBO, VAO;
-        glGenBuffers(1, &VBO); 
+        unsigned int VBO, VAO, EBO;
+        glGenBuffers(1, &VBO);
+        glGenBuffers(1, &EBO);
         glGenVertexArrays(1, &VAO);
 
         glBindVertexArray(VAO);
@@ -84,9 +44,16 @@ namespace Marlin {
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);  
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+        // Position Attribute
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+
+        // Color Attribute
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3* sizeof(float)));
+        glEnableVertexAttribArray(1);
 
         while(gameRunning) {
                 // Draw a background color
@@ -94,13 +61,19 @@ namespace Marlin {
                 glClear(GL_COLOR_BUFFER_BIT);
 
                 // Activate the shader
-                glUseProgram(shaderProgram);
+                ourShader.use();
 
                 // Bind the VAO
                 glBindVertexArray(VAO);
 
-                // First Triangle!
-                glDrawArrays(GL_TRIANGLES, 0, 3);
+                // Update uniform color
+                float timeValue = glfwGetTime();
+                float greenValue = sin(timeValue) / 2.0f + 0.5f;
+                int vertexColorLocation = glGetUniformLocation(ourShader.ID, "ourColor");
+                glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+                // Two Triangles!
+                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
                 // Gets all kbd + mouse events, calls appropriate callback functions
                 glfwPollEvents();

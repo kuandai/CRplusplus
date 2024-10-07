@@ -54,7 +54,7 @@ test: all
 	$(BIN_DIR)/$(BIN_NAME)
 
 # Clean up build and bin directories
-clean: cleanshaders
+clean: cleanshaders shaders
 	rm -rf $(BUILD_DIR) $(BIN_DIR)
 	mkdir $(BUILD_DIR) $(BIN_DIR)
 

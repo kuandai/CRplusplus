@@ -2,7 +2,6 @@
 *.o
 bin/
 build/
-include/shader/
 
 # Editor files
 .vscode
