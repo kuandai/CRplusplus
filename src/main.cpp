@@ -9,7 +9,7 @@
 #include <thread>
 #include <atomic>
 
-// Shared flag to signal whe
+// Shared flag to signal when to shut down game
 std::atomic<bool> gameRunning(true);  // Shared flag to signal when to stop
 
 int main()
