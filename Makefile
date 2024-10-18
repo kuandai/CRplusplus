@@ -33,7 +33,13 @@ SHADER_HEADERS = $(SHADERS:$(SHADER_DIR)/%.glsl=$(SHADER_INCLUDE_DIR)/%.h)
 OUT = $(BIN_DIR)/$(BIN_NAME)
 
 # Default target
-all: shaders $(OUT)
+all: shaders $(OUT) pack
+
+# Package binary into archive
+pack:
+	cp -r textures $(BIN_DIR)
+	rm -f $(BIN_DIR)/$(BIN_NAME).zip
+	zip $(BIN_DIR)/$(BIN_NAME).zip $$(find $(BIN_DIR) -type f)
 
 # Link the target binary from the object files
 $(OUT): $(OBJ)
@@ -71,4 +77,4 @@ cleanshaders:
 	mkdir $(SHADER_INCLUDE_DIR)
 
 # Phony targets
-.PHONY: all clean test shaders
+.PHONY: all clean test shaders pack

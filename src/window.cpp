@@ -5,6 +5,7 @@
 #include <shader/fragment-shader.h>
 
 #include <shader.hpp>
+#include <texture.hpp>
 
 #include <iostream>
 #include <cmath>
@@ -24,10 +25,11 @@ namespace Marlin {
 
         // Quick proof-of-concept
         float vertices[] = { // EBO reduces footprint of verticies
-            0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // top right
-            0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,  // bottom right
-            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom left
-            -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f   // top left 
+            // Positions        // Colors         // Texture coordinates
+            0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f, 2.0f, 2.0f,   // top right
+            0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f, 2.0f, 0.0f,   // bottom right
+            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // bottom left
+            -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f    // top left
         };
         unsigned int indices[] = {  // note that we start from 0!
             0, 1, 3,   // first triangle
@@ -48,12 +50,21 @@ namespace Marlin {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
         // Position Attribute
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
 
         // Color Attribute
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3* sizeof(float)));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3* sizeof(float)));
         glEnableVertexAttribArray(1);
+
+        // Texture Coordinate Attribute
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+
+
+        // Example Texture
+        Marlin::loadNewTexture("./textures/wall.jpg", "brick_wall");
+        
 
         while(gameRunning) {
                 // Draw a background color
@@ -62,6 +73,9 @@ namespace Marlin {
 
                 // Activate the shader
                 ourShader.use();
+
+                // Bind the texture - This assigns it to the Sampler2D in the fragment shader
+                glBindTexture(GL_TEXTURE_2D, Marlin::textureAtlas["brick_wall"].texture);
 
                 // Bind the VAO
                 glBindVertexArray(VAO);
@@ -72,7 +86,7 @@ namespace Marlin {
                 int vertexColorLocation = glGetUniformLocation(ourShader.ID, "ourColor");
                 glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
-                // Two Triangles!
+                // Draw the shape
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
                 // Gets all kbd + mouse events, calls appropriate callback functions
