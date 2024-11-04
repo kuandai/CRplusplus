@@ -2,7 +2,7 @@
 CXX = g++
 
 # Compiler flags
-CFLAGS = -Wall -Wextra -std=c++20 -O2
+CFLAGS = -Wall -Wextra -std=c++20 -O2 -s
 
 # Linker flags
 LDFLAGS = -lSDL2 -lGLEW -lGL -ldl -lGLU -lglfw -lX11 -lpthread
@@ -33,10 +33,13 @@ SHADER_HEADERS = $(SHADERS:$(SHADER_DIR)/%.glsl=$(SHADER_INCLUDE_DIR)/%.h)
 OUT = $(BIN_DIR)/$(BIN_NAME)
 
 # Default target
-all: shaders $(OUT) pack
+all: pack
+
+# Compilation target
+compile: shaders $(OUT)
 
 # Package binary into archive
-pack:
+pack: | compile
 	cp -r textures $(BIN_DIR)
 	rm -f $(BIN_DIR)/$(BIN_NAME).zip
 	zip $(BIN_DIR)/$(BIN_NAME).zip $$(find $(BIN_DIR) -type f)
