@@ -11,6 +11,8 @@
 
 #include <shader.hpp>
 #include <texture.hpp>
+#include <camera.hpp>
+#include <input.hpp>
 
 #include <iostream>
 #include <cmath>
@@ -23,6 +25,9 @@ namespace Marlin {
     {
         glViewport(0, 0, width, height);
     }
+
+    // Frame time related things
+    float currentFrame, lastFrame, deltaTime;
 
     // Render thread
     void renderThread() {
@@ -112,6 +117,14 @@ namespace Marlin {
 
 
         while(gameRunning) {
+                // Calculate delta time since last frame
+                currentFrame = glfwGetTime();
+                deltaTime = currentFrame - lastFrame;
+                lastFrame = currentFrame;
+
+                // Process key inputs
+                processInput(window, deltaTime);
+
                 // Draw a background color
                 glClearColor(0.2, 0.2, 0.2, 0.5f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Also clear depth buffer
@@ -119,12 +132,11 @@ namespace Marlin {
                 // Activate the shader
                 ourShader.use();
 
-                // create transformations
-                glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-                glm::mat4 view          = glm::mat4(1.0f);
+                // Create transformations
+                glm::mat4 model         = glm::mat4(1.0f);
+                glm::mat4 view          = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
                 glm::mat4 projection    = glm::mat4(1.0f);
-                view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-                projection = glm::perspective(glm::radians(45.0f), (float)800 / (float)600, 0.1f, 100.0f);
+                projection = glm::perspective(glm::radians(90.0f), (float)800 / (float)600, 0.1f, 100.0f);
                 // retrieve the matrix uniform locations
                 unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
                 unsigned int viewLoc  = glGetUniformLocation(ourShader.ID, "view");
@@ -140,6 +152,7 @@ namespace Marlin {
                 // Bind the VAO
                 glBindVertexArray(VAO);
 
+                // Rotate the cubes
                 for(unsigned int i = 0; i < 10; i++)
                 {
                     glm::mat4 model = glm::mat4(1.0f);
@@ -158,6 +171,7 @@ namespace Marlin {
 
                 // Gets all kbd + mouse events, calls appropriate callback functions
                 glfwPollEvents();
+
 
                 // Swaps the framebuffers (the frame should be done rendering now)
                 glfwSwapBuffers(window);

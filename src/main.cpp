@@ -49,6 +49,12 @@ int main()
     // Register keyboard update callback
     glfwSetKeyCallback(Marlin::window, Marlin::keyCallback);
 
+    // Register mouse update callback
+    glfwSetCursorPosCallback(Marlin::window, Marlin::mouseCallback);
+
+    // Set cursor mode
+    glfwSetInputMode(Marlin::window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
     // Create Render thread
     // TODO: get GLAD to cooperate and not segfault, main thread is render
     // thread for time being. Put all other thread creations above this line.
