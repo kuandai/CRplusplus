@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include <window.hpp>
 #include <camera.hpp>
 
 namespace Marlin{
@@ -24,6 +25,9 @@ namespace Marlin{
             lastY = ypos;
             firstmouse = false;
         }
+
+        // If cursor enabled, do not update camera
+        if (!isMouseCaptured) { return; }
 
         float xOffset = xpos - lastX;
         float yOffset = lastY - ypos;  // Reversed since y-coordinates go from bottom to top
@@ -65,6 +69,15 @@ namespace Marlin{
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
             cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * velocity;
         }
+
+        // Escape to toggle mouse capture
+        int escKeyState = glfwGetKey(window, GLFW_KEY_ESCAPE);
+        static int escKeyPrevState = GLFW_RELEASE;
+
+        if (escKeyState == GLFW_PRESS & escKeyPrevState != GLFW_PRESS) {
+            Marlin::isMouseCaptured = !Marlin::isMouseCaptured;
+        }
+        escKeyPrevState = escKeyState;
     }
 
 }

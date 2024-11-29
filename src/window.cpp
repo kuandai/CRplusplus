@@ -19,11 +19,15 @@
 
 namespace Marlin {
     GLFWwindow* window;
+    std::pair<int, int> fb_dimensions = {800, 600};
+
+    bool isMouseCaptured = false;
 
     // Callback function for resizing framebuffer upon window resize
     void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     {
         glViewport(0, 0, width, height);
+        fb_dimensions = {width, height};
     }
 
     // Frame time related things
@@ -125,6 +129,10 @@ namespace Marlin {
                 // Process key inputs
                 processInput(window, deltaTime);
 
+                // Release/capture cursor as needed
+                if (isMouseCaptured) { glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); }
+                else { glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); }
+
                 // Draw a background color
                 glClearColor(0.2, 0.2, 0.2, 0.5f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Also clear depth buffer
@@ -136,14 +144,15 @@ namespace Marlin {
                 glm::mat4 model         = glm::mat4(1.0f);
                 glm::mat4 view          = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
                 glm::mat4 projection    = glm::mat4(1.0f);
-                projection = glm::perspective(glm::radians(90.0f), (float)800 / (float)600, 0.1f, 100.0f);
+                projection = glm::perspective(glm::radians(90.0f), (float)fb_dimensions.first / (float)fb_dimensions.second, 0.1f, 100.0f);
+
                 // retrieve the matrix uniform locations
                 unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
                 unsigned int viewLoc  = glGetUniformLocation(ourShader.ID, "view");
+
                 // pass them to the shaders (3 different ways)
                 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
                 glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
-                // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
                 ourShader.setMat4("projection", projection);
 
                 // Bind the texture - This assigns it to the Sampler2D in the fragment shader
@@ -151,19 +160,6 @@ namespace Marlin {
 
                 // Bind the VAO
                 glBindVertexArray(VAO);
-
-                // Rotate the cubes
-                for(unsigned int i = 0; i < 10; i++)
-                {
-                    glm::mat4 model = glm::mat4(1.0f);
-                    model = glm::translate(model, cubePositions[i]);
-                    float angle = 20.0f * i; 
-                    angle += (float)fmod(50*glfwGetTime(), 360.0f) * ((int)(bool)i * 2 - 1);
-                    model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-                    ourShader.setMat4("model", model);
-
-                    glDrawArrays(GL_TRIANGLES, 0, 36);
-                }
 
 
                 // Draw the cube

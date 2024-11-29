@@ -2,5 +2,15 @@
 A simple recreation of Cosmic Reach in C++. Might not get anywhere and is simply a project for me to learn OpenGL.
 
 # Dependencies
-- GLM
-- Glad
+- GLFW
+- GLEW
+- SDL2
+
+# Build requirements
+- A C++ compiler
+- make
+- zip
+- xdd
+- libglfw-dev (glfw-devel on Fedora/derivatives)
+- libsdl2-dev (SDL2-devel on Fedora/derivatives)
+- libglew-dev (glew-devel on Fedora/derivatives)
