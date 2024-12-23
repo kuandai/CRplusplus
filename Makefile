@@ -5,7 +5,7 @@ CXX = g++
 CFLAGS = -Wall -Wextra -std=c++20 -O2 -s
 
 # Linker flags
-LDFLAGS = -lSDL2 -lGLEW -lGL -ldl -lGLU -lglfw -lX11 -lpthread
+LDFLAGS = -lSDL2 -lGLEW -lGL -ldl -lGLU -lglfw -lX11 -lpthread -lspdlog
 
 # Binary name
 BIN_NAME = game
@@ -19,7 +19,7 @@ SHADER_DIR = shader
 SHADER_INCLUDE_DIR = $(INCLUDE_DIR)/shader
 
 # Include flags
-INCLUDEFLAGS = $(shell find $(INCLUDE_DIR) -type d -printf '-I%p ')
+INCLUDEFLAGS = $(shell find $(INCLUDE_DIR) -type d -printf '-I%p ') $(shell pkg-config --cflags spdlog)
 
 # Find all source files in the SRC_DIR, replace extension .c or .cpp with .o and prefix with BUILD_DIR/
 SRC = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*.c)
@@ -59,7 +59,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CXX) $(CFLAGS) $(INCLUDEFLAGS) -c $< -o $@
 
 # Build and run the program
-test: all
+run: all
 	$(BIN_DIR)/$(BIN_NAME)
 
 # Clean up build and bin directories

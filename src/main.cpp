@@ -9,11 +9,15 @@
 #include <thread>
 #include <atomic>
 
+#include "spdlog/spdlog.h"
+
 // Shared flag to signal when to shut down game
 std::atomic<bool> gameRunning(true);  // Shared flag to signal when to stop
 
 int main()
 {
+    spdlog::info("Cosmic Reach++");
+
     glfwInit();
 
     // OpenGL 3.3
@@ -27,7 +31,7 @@ int main()
     Marlin::window = glfwCreateWindow(800, 600, "Cosmic Reach++", NULL, NULL);
     if (Marlin::window == NULL)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
+        spdlog::critical("Failed to create GLFW window");
         glfwTerminate();
         return -1;
     }
@@ -36,7 +40,7 @@ int main()
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        std::cout << "Failed to initialize GLAD" << std::endl;
+        spdlog::critical("Failed to initialize GLAD");
         return -1;
     }
 
@@ -58,7 +62,6 @@ int main()
     // Create Render thread
     // TODO: get GLAD to cooperate and not segfault, main thread is render
     // thread for time being. Put all other thread creations above this line.
-    // For the time being
     Marlin::renderThread();
 
     // Wait for threads to finish
