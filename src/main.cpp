@@ -21,8 +21,9 @@ int main()
     // Create Game Window
     Marlin::GameWindow game;
 
-    while (true) {}
+    while (gameRunning) {}
 
     // Quit
+    spdlog::info("Exiting game. Have a good day");
     return 0;
 }

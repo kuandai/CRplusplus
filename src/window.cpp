@@ -59,6 +59,13 @@ namespace Marlin {
         renderThread = std::thread(&GameWindow::renderLoop, this);
     }
 
+    GameWindow::~GameWindow() {
+        if (renderThread.joinable()) {
+            // Join if still running
+            renderThread.join();
+        }
+    }
+
     // GLFW window initialization
     int GameWindow::init() {
         // Initialize GLFW
@@ -241,70 +248,71 @@ namespace Marlin {
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
 
-
         // Example Texture
         Marlin::loadNewTexture("./textures/wall.jpg", "brick_wall");
 
-
         while(gameRunning) {
-                // Calculate delta time since last frame
-                currentFrame = glfwGetTime();
-                deltaTime = currentFrame - lastFrame;
-                lastFrame = currentFrame;
+            // Calculate delta time since last frame
+            currentFrame = glfwGetTime();
+            deltaTime = currentFrame - lastFrame;
+            lastFrame = currentFrame;
 
-                // Process key inputs
-                processInput(window, deltaTime);
+            // Process key inputs
+            processInput(window, deltaTime);
 
-                // Release/capture cursor as needed
-                if (isMouseCaptured) { glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); }
-                else { glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); }
+            // Release/capture cursor as needed
+            if (isMouseCaptured) { glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); }
+            else { glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); }
 
-                // Draw a background color
-                glClearColor(0.2, 0.2, 0.2, 0.5f);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Also clear depth buffer
+            // Draw a background color
+            glClearColor(0.2, 0.2, 0.2, 0.5f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Also clear depth buffer
 
-                // Activate the shader
-                ourShader.use();
+            // Activate the shader
+            ourShader.use();
 
-                // Create transformations
-                glm::mat4 model         = glm::mat4(1.0f);
-                glm::mat4 view          = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-                glm::mat4 projection    = glm::mat4(1.0f);
-                projection = glm::perspective(glm::radians(90.0f), (float)fb_dimensions.first / (float)fb_dimensions.second, 0.1f, 100.0f);
+            // Create transformations
+            glm::mat4 model         = glm::mat4(1.0f);
+            glm::mat4 view          = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+            glm::mat4 projection    = glm::mat4(1.0f);
+            projection = glm::perspective(glm::radians(90.0f), (float)fb_dimensions.first / (float)fb_dimensions.second, 0.1f, 100.0f);
 
-                // retrieve the matrix uniform locations
-                unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-                unsigned int viewLoc  = glGetUniformLocation(ourShader.ID, "view");
+            // retrieve the matrix uniform locations
+            unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
+            unsigned int viewLoc  = glGetUniformLocation(ourShader.ID, "view");
 
-                // pass them to the shaders (3 different ways)
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-                glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
-                ourShader.setMat4("projection", projection);
+            // pass them to the shaders (3 different ways)
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
+            ourShader.setMat4("projection", projection);
 
-                // Bind the texture - This assigns it to the Sampler2D in the fragment shader
-                glBindTexture(GL_TEXTURE_2D, Marlin::textureAtlas["brick_wall"].texture);
+            // Bind the texture - This assigns it to the Sampler2D in the fragment shader
+            glBindTexture(GL_TEXTURE_2D, Marlin::textureAtlas["brick_wall"].texture);
 
-                // Bind the VAO
-                glBindVertexArray(VAO);
-
-
-                // Draw the cube
-                glDrawArrays(GL_TRIANGLES, 0, 36);
-
-                // Gets all kbd + mouse events, calls appropriate callback functions
-                glfwPollEvents();
+            // Bind the VAO
+            glBindVertexArray(VAO);
 
 
-                // Swaps the framebuffers (the frame should be done rendering now)
-                glfwSwapBuffers(window);
+            // Draw the cube
+            glDrawArrays(GL_TRIANGLES, 0, 36);
 
-                // Stop game if window is closed
-                if (glfwWindowShouldClose(window)) {
-                    gameRunning = false;
-                }
+            // Gets all kbd + mouse events, calls appropriate callback functions
+            glfwPollEvents();
+
+
+            // Swaps the framebuffers (the frame should be done rendering now)
+            glfwSwapBuffers(window);
+
+            // Stop game if window is closed
+            if (glfwWindowShouldClose(window)) {
+                spdlog::info("Stopping...");
+                gameRunning = false;
+
+            }
         }
-
         // Clean up resources & exit
         glfwTerminate(); // Deallocate GLFW resources
+        return;
+
     }
 }

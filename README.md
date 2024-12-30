@@ -7,7 +7,7 @@ A simple recreation of Cosmic Reach in C++. Might not get anywhere and is simply
 - SDL2
 
 # Build requirements
-- A C++ compiler
+- A C++ compiler (Note: The Makefile uses `g++` by default, it is necessary to modify it if you plan to use a different compiler.)
 - make
 - zip
 - xdd

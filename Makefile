@@ -2,7 +2,7 @@
 CXX = g++
 
 # Compiler flags
-CFLAGS = -Wall -Wextra -std=c++20 -O2 -s
+CFLAGS = -Wall -Wextra -pthread -std=c++20 -O2 -s
 
 # Linker flags
 LDFLAGS = -lSDL2 -lGLEW -lGL -ldl -lGLU -lglfw -lX11 -lpthread -lspdlog
