@@ -6,16 +6,32 @@
 
 #include <GLFW/glfw3.h>
 
+#include <thread>
+#include <atomic>
+
 namespace Marlin {
-    // The Window
-    extern GLFWwindow* window;
-    
-    // Mouse is captured state
-    extern bool isMouseCaptured;
+    class GameWindow {
+        public:
+            // Constructor and Destructor
+            GameWindow();
+            ~GameWindow();
+            
+            // Window/interface state
+            static bool isMouseCaptured;
 
-    // Callback function for resizing framebuffer upon window resize
-    void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+        private:
+            // Frame time
+            float currentFrame, lastFrame, deltaTime;
 
-    // Render Thread
-    void renderThread();
+            // The Window
+            GLFWwindow* window;
+            
+            // Input processing
+            static void processInput(GLFWwindow* window, float deltaTime);
+
+            // Render Thread
+            int init();
+            void renderLoop();
+            std::thread renderThread;
+    };
 }

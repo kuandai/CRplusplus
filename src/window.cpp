@@ -9,6 +9,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <spdlog/spdlog.h>
+
 #include <shader.hpp>
 #include <texture.hpp>
 #include <camera.hpp>
@@ -18,23 +20,147 @@
 #include <cmath>
 
 namespace Marlin {
-    GLFWwindow* window;
     std::pair<int, int> fb_dimensions = {800, 600};
 
-    bool isMouseCaptured = false;
+    // Static members
+    bool GameWindow::isMouseCaptured = false;
 
-    // Callback function for resizing framebuffer upon window resize
-    void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-    {
-        glViewport(0, 0, width, height);
-        fb_dimensions = {width, height};
+    // Input handling
+    void GameWindow::processInput(GLFWwindow* window, float deltaTime) {
+        // Simple camera motion
+        float velocity = cameraSpeed * deltaTime;
+
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            cameraPos += velocity * cameraFront;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            cameraPos -= velocity * cameraFront;
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * velocity;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * velocity;
+        }
+
+        // Escape to toggle mouse capture
+        int escKeyState = glfwGetKey(window, GLFW_KEY_ESCAPE);
+        static int escKeyPrevState = GLFW_RELEASE;
+
+        if (escKeyState == GLFW_PRESS & escKeyPrevState != GLFW_PRESS) {
+            Marlin::GameWindow::isMouseCaptured = !Marlin::GameWindow::isMouseCaptured;
+        }
+        escKeyPrevState = escKeyState;
     }
 
-    // Frame time related things
-    float currentFrame, lastFrame, deltaTime;
+    // Contructor and destructor
+    GameWindow::GameWindow() {
+        spdlog::info("Game window created");
+        renderThread = std::thread(&GameWindow::renderLoop, this);
+    }
+
+    // GLFW window initialization
+    int GameWindow::init() {
+        // Initialize GLFW
+        glfwInit();
+
+        // OpenGL 3.3
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+
+        // Core profile: reduced feature set, no backwards compatibility
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+        // Create a window
+        Marlin::GameWindow::window = glfwCreateWindow(800, 600, "Cosmic Reach++", NULL, NULL);
+        if (Marlin::GameWindow::window == NULL)
+        {
+            spdlog::critical("Failed to create GLFW window");
+            glfwTerminate();
+            return -1;
+        }
+        glfwMakeContextCurrent(Marlin::GameWindow::window);
+
+        // Initialize GLAD
+        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+        {
+            spdlog::critical("Failed to initialize GLAD");
+            return -1;
+        }
+
+        // Set Viewport - should be same as window size
+        glViewport(0, 0, 800, 600);
+
+        // Register framebuffer resize callback
+        glfwSetFramebufferSizeCallback(Marlin::GameWindow::window, [](GLFWwindow* window, int width, int height)
+            {
+                glViewport(0, 0, width, height);
+                fb_dimensions = {width, height};
+            });
+
+        // Register keyboard update callback
+        glfwSetKeyCallback(Marlin::GameWindow::window, [](GLFWwindow* window, int key, int scancode, int action, int mods) 
+            {
+                // Write all key events to `keyboard`
+                if (key >= 0 && key < keyboard.size()) {
+                    keyboard[key] = action;  // Store the action (GLFW_PRESS, GLFW_RELEASE)
+                }
+            });
+
+        // Register mouse update callback
+        glfwSetCursorPosCallback(Marlin::GameWindow::window, [](GLFWwindow* window, double xpos, double ypos) 
+            {
+                // Inital Position for mouse: center of screen
+                static float lastX = 400, lastY = 300;
+                static bool firstmouse = true;
+
+                if (firstmouse) {
+                    lastX = xpos;
+                    lastY = ypos;
+                    firstmouse = false;
+                }
+
+                // If cursor enabled, do not update camera
+                if (!Marlin::GameWindow::isMouseCaptured) { return; }
+
+                float xOffset = xpos - lastX;
+                float yOffset = lastY - ypos;  // Reversed since y-coordinates go from bottom to top
+                lastX = xpos;
+                lastY = ypos;
+
+                xOffset *= sensitivity;
+                yOffset *= sensitivity;
+
+                yaw += xOffset;
+                pitch += yOffset;
+
+                // Constrain the pitch to prevent screen flipping
+                if (pitch > 89.0f)
+                    pitch = 89.0f;
+                if (pitch < -89.0f)
+                    pitch = -89.0f;
+
+                glm::vec3 front;
+                front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+                front.y = sin(glm::radians(pitch));
+                front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+                cameraFront = glm::normalize(front);
+            });
+
+        // Set cursor mode
+        glfwSetInputMode(Marlin::GameWindow::window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+        return 0;
+    }
 
     // Render thread
-    void renderThread() {
+    void GameWindow::renderLoop() {
+        if (init()) { // If `init` fails (nonzero return)
+            spdlog::critical("Render thread failed to initialize");
+            return;
+        }
+
+        // Build shader program
         Shader ourShader(shader_vertex_shader_glsl, shader_fragment_shader_glsl);
 
         // Configure OpenGL Global State
