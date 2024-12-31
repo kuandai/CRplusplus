@@ -1,4 +1,4 @@
-#include <camera.hpp>
+#include <render/camera.hpp>
 
 namespace Marlin {
     // Camera parameters

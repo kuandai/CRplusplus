@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-#include <window.hpp>
-#include <camera.hpp>
+#include <render/window.hpp>
+#include <render/camera.hpp>
 
 namespace Marlin{
     std::vector<int> keyboard(GLFW_KEY_LAST+1, GLFW_RELEASE);

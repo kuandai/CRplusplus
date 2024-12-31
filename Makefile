@@ -22,7 +22,7 @@ SHADER_INCLUDE_DIR = $(INCLUDE_DIR)/shader
 INCLUDEFLAGS = $(shell find $(INCLUDE_DIR) -type d -printf '-I%p ') $(shell pkg-config --cflags spdlog)
 
 # Find all source files in the SRC_DIR, replace extension .c or .cpp with .o and prefix with BUILD_DIR/
-SRC = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*.c)
+SRC = $(shell find $(SRC_DIR) -type f \( -name "*.cpp" -o -name "*.c" \))
 OBJ = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC)))
 
 # Shader files
@@ -51,11 +51,11 @@ $(OUT): $(OBJ)
 
 # Compile source files into object files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(dir $@)
 	$(CXX) $(CFLAGS) $(INCLUDEFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(dir $@)
 	$(CXX) $(CFLAGS) $(INCLUDEFLAGS) -c $< -o $@
 
 # Build and run the program

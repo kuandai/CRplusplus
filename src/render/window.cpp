@@ -1,4 +1,4 @@
-#include <window.hpp>
+#include <render/window.hpp>
 
 #include <globals.hpp>
 #include <shader/vertex-shader.h>
@@ -11,9 +11,9 @@
 
 #include <spdlog/spdlog.h>
 
-#include <shader.hpp>
-#include <texture.hpp>
-#include <camera.hpp>
+#include <render/shader.hpp>
+#include <render/texture.hpp>
+#include <render/camera.hpp>
 #include <input.hpp>
 
 #include <iostream>

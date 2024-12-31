@@ -1,4 +1,4 @@
-#include <texture.hpp>
+#include <render/texture.hpp>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
