@@ -5,7 +5,7 @@ CXX = g++
 CFLAGS = -Wall -Wextra -pthread -std=c++20 -O2 -s
 
 # Linker flags
-LDFLAGS = -lSDL2 -lGLEW -lGL -ldl -lGLU -lglfw -lX11 -lpthread -lspdlog
+LDFLAGS = -lSDL2 -lGLEW -lGL -ldl -lGLU -lglfw -lX11 -lpthread -lspdlog -lfmt -lc4core -lryml
 
 # Binary name
 BIN_NAME = game
@@ -40,7 +40,7 @@ compile: shaders $(OUT)
 
 # Package binary into archive
 pack: | compile
-	cp -r textures $(BIN_DIR)
+	cp -r res $(BIN_DIR)
 	rm -f $(BIN_DIR)/$(BIN_NAME).zip
 	zip $(BIN_DIR)/$(BIN_NAME).zip $$(find $(BIN_DIR) -type f)
 

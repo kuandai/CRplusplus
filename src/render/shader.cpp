@@ -1,40 +1,38 @@
 #include <render/shader.hpp>
 
+#include <spdlog/spdlog.h>
+
 #include <iostream>
 
 namespace Marlin {
-    Shader::Shader(const char* vertexSource, const char* fragmentSource) {
-        // Vertex Shader
-        const char *vertexShaderSource = vertexSource + '\0';
-        unsigned int vertexShader;
-        vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-        glCompileShader(vertexShader); // Compile the shader
+    // Reduce redundant code in shader compilation
+    static unsigned int compileShader(unsigned int type, const char* source) {
+        // Pad shader with null terminater
+        const char *src = source + '\0';
+        unsigned int shader;
+        shader = glCreateShader(type);
+        glShaderSource(shader, 1, &src, NULL);
+        glCompileShader(shader); // Compile the shader
 
         // If compilation fails, indicate failure
         int  success;
-        char infoLog[512];
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         if(!success) {
-            glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+            int logLength;
+            glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+            char* infoLog = (char*)alloca(logLength * sizeof(char));
+            glGetShaderInfoLog(shader, logLength, &logLength, infoLog);
+            spdlog::error("Shader compilation failed.\n" + std::string(infoLog));
         }
+        return shader;
+    }
+
+    Shader::Shader(const char* vertexSource, const char* fragmentSource) {
+        // Vertex Shader
+        unsigned int vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource);
 
         // Fragment Shader
-        const char *fragmentShaderSource = fragmentSource + '\0';
-        unsigned int fragmentShader;
-        fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-        glCompileShader(fragmentShader);
-
-        // If compilation fails, indicate failure
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-
-        if(!success) {
-            glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-        }
+        unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
 
         // Shader program
         Shader::ID = glCreateProgram();
@@ -43,11 +41,13 @@ namespace Marlin {
         glAttachShader(Shader::ID, fragmentShader);
         glLinkProgram(Shader::ID);
 
-        // Once again, indicate failure if necessary
+        // Indicate failure if necessary
+        int success;
         glGetProgramiv(Shader::ID, GL_LINK_STATUS, &success);
         if(!success) {
+            char infoLog[512];
             glGetShaderInfoLog(Shader::ID, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::PROGRAM::LINKAGE_FAILED\n" << infoLog << std::endl;
+            spdlog::error("Shader program linkage failed\n" + std::string(infoLog));
         }
 
         // Delete vertex and fragment shader objects; already linked

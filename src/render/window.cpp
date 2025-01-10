@@ -18,8 +18,11 @@
 
 #include <iostream>
 #include <cmath>
+#include <format>
 
 namespace Marlin {
+    const bool USE_VSYNC = true;
+
     std::pair<int, int> fb_dimensions = {800, 600};
 
     // Static members
@@ -69,7 +72,11 @@ namespace Marlin {
     // GLFW window initialization
     int GameWindow::init() {
         // Initialize GLFW
-        glfwInit();
+        if (glfwInit() == GLFW_FALSE) {
+            spdlog::critical("Unable to initialize GLFW");
+            // If glfwInit fails, it calls glfwTerminate. No need to do so again
+            return -1;
+        }
 
         // OpenGL 3.3
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -88,12 +95,17 @@ namespace Marlin {
         }
         glfwMakeContextCurrent(Marlin::GameWindow::window);
 
+        // Set vsync
+        glfwSwapInterval(USE_VSYNC);
+
         // Initialize GLAD
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
             spdlog::critical("Failed to initialize GLAD");
             return -1;
         }
+
+        spdlog::info("OpenGL Version: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION))));
 
         // Set Viewport - should be same as window size
         glViewport(0, 0, 800, 600);
@@ -218,25 +230,12 @@ namespace Marlin {
             -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
         };
 
-        glm::vec3 cubePositions[] = {
-            glm::vec3( 0.0f,  0.0f,  0.0f),
-            glm::vec3( 2.0f,  5.0f, -15.0f),
-            glm::vec3(-1.5f, -2.2f, -2.5f),
-            glm::vec3(-3.8f, -2.0f, -12.3f),
-            glm::vec3( 2.4f, -0.4f, -3.5f),
-            glm::vec3(-1.7f,  3.0f, -7.5f),
-            glm::vec3( 1.3f, -2.0f, -2.5f),
-            glm::vec3( 1.5f,  2.0f, -2.5f),
-            glm::vec3( 1.5f,  0.2f, -1.5f),
-            glm::vec3(-1.3f,  1.0f, -1.5f)
-        };
         
         unsigned int VBO, VAO;
         glGenBuffers(1, &VBO);
         glGenVertexArrays(1, &VAO);
 
         glBindVertexArray(VAO);
-
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
@@ -249,7 +248,7 @@ namespace Marlin {
         glEnableVertexAttribArray(1);
 
         // Example Texture
-        Marlin::loadNewTexture("./textures/wall.jpg", "brick_wall");
+        Marlin::loadNewTexture("./res/textures/wall.jpg", "brick_wall");
 
         while(gameRunning) {
             // Calculate delta time since last frame

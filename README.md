@@ -10,8 +10,9 @@ A simple recreation of Cosmic Reach in C++. Might not get anywhere and is simply
 - A C++ compiler (Note: The Makefile uses `g++` by default, it is necessary to modify it if you plan to use a different compiler.)
 - make
 - zip
-- xdd
+- xxd
 - libglfw-dev (glfw-devel on Fedora/derivatives)
 - libsdl2-dev (SDL2-devel on Fedora/derivatives)
 - libglew-dev (glew-devel on Fedora/derivatives)
 - libspdlog-dev (spdlog-devel on Fedora/derivatives)
+- rapidyaml-devel on Fedora/derivatives. There does not appear to be a package for apt/dpkg
