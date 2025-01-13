@@ -1,6 +1,7 @@
 #include <render/window.hpp>
 #include <input.hpp>
 #include <globals.hpp>
+#include <config.hpp>
 
 #include <iostream>
 #include <thread>
@@ -21,22 +22,25 @@ int main()
     // Set log layout
     spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [thread %t] [%^%l%$] %v");
 
-    // Load settings file
-    std::ifstream cfgFile("./res/settings.yaml");
-    if (!cfgFile.is_open()) {
-        spdlog::warn("Unable to open settings file. Using defaults.");
-    } else {
-        std::string cfgDataString((std::istreambuf_iterator<char>(cfgFile)),
-                            std::istreambuf_iterator<char>());
-        ryml::Tree cfgTree = ryml::parse_in_arena(ryml::to_csubstr(cfgDataString));
-        ryml::NodeRef cfgRoot = cfgTree["root"];
-        try {
-            std::cout << cfgTree["logLevel"] << std::endl;
-        } catch (const std::exception &e) {
-        spdlog::error("YAML processing error: {}", e.what());
-        }
+    // TRACE 0
+    // DEBUG 1
+    // INFO 2
+    // WARN 3
+    // ERROR 4
+    // CRITICAL 5
+    // OFF 6
+    int logLevel = 0;
 
+    // Load settings file
+    if (Marlin::config::init(std::ifstream("./res/settings.yaml"))) {
+        spdlog::warn("Settings parsing failed. Using defaults");
+    } else {
+        Marlin::config::cfgRoot["logLevel"] >> logLevel;
     }
+
+    // Apply applicable settings
+    spdlog::set_level(static_cast<spdlog::level::level_enum>(logLevel));
+    spdlog::info(std::format("Log level: {}", logLevel));
 
     spdlog::info("Cosmic Reach++");
 
