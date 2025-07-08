@@ -110,61 +110,14 @@ namespace Marlin {
         // Set Viewport - should be same as window size
         glViewport(0, 0, 800, 600);
 
-        // Register framebuffer resize callback
+        // Register callbacks
         glfwSetFramebufferSizeCallback(Marlin::GameWindow::window, [](GLFWwindow* window, int width, int height)
             {
                 glViewport(0, 0, width, height);
                 fb_dimensions = {width, height};
-            });
-
-        // Register keyboard update callback
-        glfwSetKeyCallback(Marlin::GameWindow::window, [](GLFWwindow* window, int key, int scancode, int action, int mods) 
-            {
-                // Write all key events to `keyboard`
-                if (key >= 0 && key < keyboard.size()) {
-                    keyboard[key] = action;  // Store the action (GLFW_PRESS, GLFW_RELEASE)
-                }
-            });
-
-        // Register mouse update callback
-        glfwSetCursorPosCallback(Marlin::GameWindow::window, [](GLFWwindow* window, double xpos, double ypos) 
-            {
-                // Inital Position for mouse: center of screen
-                static float lastX = 400, lastY = 300;
-                static bool firstmouse = true;
-
-                if (firstmouse) {
-                    lastX = xpos;
-                    lastY = ypos;
-                    firstmouse = false;
-                }
-
-                // If cursor enabled, do not update camera
-                if (!Marlin::GameWindow::isMouseCaptured) { return; }
-
-                float xOffset = xpos - lastX;
-                float yOffset = lastY - ypos;  // Reversed since y-coordinates go from bottom to top
-                lastX = xpos;
-                lastY = ypos;
-
-                xOffset *= sensitivity;
-                yOffset *= sensitivity;
-
-                yaw += xOffset;
-                pitch += yOffset;
-
-                // Constrain the pitch to prevent screen flipping
-                if (pitch > 89.0f)
-                    pitch = 89.0f;
-                if (pitch < -89.0f)
-                    pitch = -89.0f;
-
-                glm::vec3 front;
-                front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-                front.y = sin(glm::radians(pitch));
-                front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-                cameraFront = glm::normalize(front);
-            });
+            }); // Fb resize
+        glfwSetKeyCallback(Marlin::GameWindow::window, Marlin::keyCallback); // Keyboard
+        glfwSetCursorPosCallback(Marlin::GameWindow::window, Marlin::mouseCallback); // Mouse
 
         // Set cursor mode
         glfwSetInputMode(Marlin::GameWindow::window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
