@@ -6,3 +6,6 @@ include/shader/
 
 # Editor files
 .vscode
+.clangd
+compile_commands.json
+.cache/

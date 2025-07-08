@@ -1,11 +1,11 @@
 # Compiler
-CXX = g++
+CXX = clang++
 
 # Compiler flags
-CFLAGS = -Wall -Wextra -pthread -std=c++20 -O2 -s
+CFLAGS = -Wall -Wextra -pthread -std=c++20 -O2
 
 # Linker flags
-LDFLAGS = -lSDL2 -lGLEW -lGL -ldl -lGLU -lglfw -lX11 -lpthread -lspdlog -lfmt -lc4core -lryml
+LDFLAGS = -s -lSDL2 -lGLEW -lGL -ldl -lGLU -lglfw -lX11 -lpthread -lspdlog -lfmt -lc4core -lryml
 
 # Binary name
 BIN_NAME = game

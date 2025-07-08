@@ -4,7 +4,7 @@
 
 namespace Marlin::config {
     ryml::Tree cfgTree;
-    ryml::ConstNodeRef cfgRoot;
+    ryml::NodeRef cfgRoot;
     bool parseFailed = false; // Flag to determine if a parse failed.
 
     int init(std::ifstream cfgFile) {

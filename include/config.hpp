@@ -7,7 +7,7 @@
 
 namespace Marlin::config {
     extern ryml::Tree cfgTree;
-    extern ryml::ConstNodeRef cfgRoot;
+    extern ryml::NodeRef cfgRoot;
     extern bool parseFailed;
     int init(std::ifstream cfgFile);
 }
